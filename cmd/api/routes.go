@@ -33,7 +33,14 @@ func (app *application) routes() http.Handler {
 			app.errorLog.Println(err)
 			return
 		}
-		app.writeJSON(w, http.StatusOK, all)
+
+		payload := jsonResponse{
+			Error:   false,
+			Message: "success",
+			Data:    envelope{"users": all},
+		}
+
+		app.writeJSON(w, http.StatusOK, payload)
 	})
 
 	mux.Get("/users/add", func(w http.ResponseWriter, r *http.Request) {
@@ -105,6 +112,23 @@ func (app *application) routes() http.Handler {
 			Message: "success",
 			Data:    token,
 		}
+
+		app.writeJSON(w, http.StatusOK, payload)
+	})
+
+	mux.Get("/test-validate-token", func(w http.ResponseWriter, r *http.Request) {
+
+		tokenToValidate := r.URL.Query().Get("token")
+		valid, err := app.models.Token.ValidToken(tokenToValidate)
+
+		if err != nil {
+			app.errorLog.Println(err)
+			return
+		}
+
+		var payload jsonResponse
+		payload.Error = false
+		payload.Data = valid
 
 		app.writeJSON(w, http.StatusOK, payload)
 	})
