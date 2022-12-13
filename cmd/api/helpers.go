@@ -8,13 +8,13 @@ import (
 	"strings"
 )
 
+// readJSON tries to read the body of a request and converts it into JSON
 func (app *application) readJSON(w http.ResponseWriter, r *http.Request, data interface{}) error {
-	maxBytes := 1048576 // one megabyter
+	maxBytes := 1048576 // one megabyte
 	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
 
 	dec := json.NewDecoder(r.Body)
 	err := dec.Decode(data)
-
 	if err != nil {
 		return err
 	}
@@ -27,10 +27,9 @@ func (app *application) readJSON(w http.ResponseWriter, r *http.Request, data in
 	return nil
 }
 
+// writeJSON takes a response status code and aribitrary data and writes a json response to the client
 func (app *application) writeJSON(w http.ResponseWriter, status int, data interface{}, headers ...http.Header) error {
-
 	out, err := json.MarshalIndent(data, "", "\t")
-
 	if err != nil {
 		return err
 	}
@@ -51,6 +50,8 @@ func (app *application) writeJSON(w http.ResponseWriter, status int, data interf
 	return nil
 }
 
+// errorJSON takes an error, and optionally a response status code, and generates and sends
+// a json error response
 func (app *application) errorJSON(w http.ResponseWriter, err error, status ...int) {
 	statusCode := http.StatusBadRequest
 
@@ -67,7 +68,7 @@ func (app *application) errorJSON(w http.ResponseWriter, err error, status ...in
 	case strings.Contains(err.Error(), "SQLSTATE 22001"):
 		customErr = errors.New("the value you are trying to insert is too large")
 		statusCode = http.StatusForbidden
-	case strings.Contains(err.Error(), "SQLSTATE 23403"):
+	case strings.Contains(err.Error(), "SQLSTATE 23503"):
 		customErr = errors.New("foreign key violation")
 		statusCode = http.StatusForbidden
 	default:
